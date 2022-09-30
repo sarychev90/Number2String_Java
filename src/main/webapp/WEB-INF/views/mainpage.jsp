@@ -40,7 +40,7 @@
 		$('#number').keyup(delay(function(e) {
 			$.ajax({
 				type : 'POST',
-				url : './MainPage.n',
+				url : './start',
 				data : 'number=' + this.value,
 				success : function(data) {
 					var sumByFigure = document.getElementById('text');

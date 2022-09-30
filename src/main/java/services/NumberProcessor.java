@@ -2,13 +2,11 @@ package services;
 
 import java.util.Stack;
 
-public class NumbersDoubleToString {
+public class NumberProcessor {
 
-	private static enum Ranges {
+	private enum Ranges {
 		UNITS, HUNDREDS, THOUSANDS, MILLIONS, BILLIONS
-	};
-
-	private static Stack<ThreeChar> threeChars;
+	}
 
 	private static class ThreeChar {
 		char h, d, u;
@@ -16,11 +14,11 @@ public class NumbersDoubleToString {
 	}
 
 	public static String digits2Text(String digit) {
-		if (digit == "") {
+		if ("".equals(digit)) {
 			return "Пусто...";
 		}
 		Double d = null;
-		if (NormalDoubleNumeralOrNot(digit)) {
+		if (normalDoubleNumeralOrNot(digit)) {
 			d = Double.parseDouble(normalDoubleFormat(digit));
 		}
 		if (d == null || d < 0.0)
@@ -29,12 +27,10 @@ public class NumbersDoubleToString {
 			return "Цифра більша заданого діапазону";
 		String s = d.toString();
 		int n = s.length() - s.lastIndexOf('.');
-		// if (n > 3)
-		// return null;
 		if (n == 2) // проверяем сколько значений после запитой, если 1 -> добавляем 0
 			s += "0";
 		String[] sa = s.split("\\."); // разделяем на два массива стрингов до и после запятой
-		threeChars = new Stack<ThreeChar>();
+		Stack<ThreeChar> threeChars = new Stack<>();
 		threeChars.push(new ThreeChar());
 		threeChars.peek().range = Ranges.UNITS;
 
@@ -67,56 +63,8 @@ public class NumbersDoubleToString {
 		StringBuilder result = new StringBuilder();
 		while (!threeChars.isEmpty()) {
 			ThreeChar thch = threeChars.pop();
-////////////////////////////// собираем текст: кол.
-			if (thch.h > '0') {
-				result.append(getHundreds(thch.h));
-				result.append(' ');
-			}
-			if (thch.d > '0') {
-				if (thch.d > '1' || (thch.d == '1' && thch.u == '0'))
-					result.append(getDecades(thch.d));
-				else if (thch.d > '0')
-					result.append(getTeens(thch.u));
-				result.append(' ');
-			}
-			if (thch.range == Ranges.UNITS) { //если ед. формируем выражение для грн.
-				if (thch.u > '0' && thch.d != '1') {
-					result.append(getUnits(thch.u, thch.range == Ranges.UNITS));
-					result.append(' ');
-				}
-			} else {
-				if (thch.u > '0' && thch.d != '1') {
-					result.append(getUnits(thch.u, thch.range == Ranges.THOUSANDS));
-					result.append(' ');
-				}
-			}
-//////////////////////////////собираем текст: порядковые ед.
-			switch (thch.range) {
-			case MILLIONS:
-				if (thch.d == '1' || thch.u == '0')
-					result.append("мільйонів");
-				else if (thch.u > '4')
-					result.append("мільйонів");
-				else if (thch.u > '1')
-					result.append("мільйони");
-				else
-					result.append("мільйон");
-				break;
-			case THOUSANDS:
-				if (sa[0].length() > 6 && thch.u == '0' && thch.d == '0' && thch.h == '0')
-					break;
-				if (thch.d == '1' || thch.u == '0')
-					result.append("тисяч");
-				else if (thch.u > '4')
-					result.append("тисяч");
-				else if (thch.u > '1')
-					result.append("тисячі");
-				else
-					result.append("тисяча");
-				break;
-			default:
-				result.append("грн.,");
-			}
+			collectCountText(result, thch);
+			collectOrdinalUnitsText(sa, result, thch);
 			result.append(' ');
 		}
 		result.append(sa[1] + ' ');
@@ -124,6 +72,60 @@ public class NumbersDoubleToString {
 		char first = Character.toUpperCase(result.charAt(0));
 		result.setCharAt(0, first);
 		return result.toString();
+	}
+
+	private static void collectCountText(StringBuilder result, ThreeChar thch) {
+		if (thch.h > '0') {
+			result.append(getHundreds(thch.h));
+			result.append(' ');
+		}
+		if (thch.d > '0') {
+			if (thch.d > '1' || (thch.d == '1' && thch.u == '0'))
+				result.append(getDecades(thch.d));
+			else if (thch.d > '0')
+				result.append(getTeens(thch.u));
+			result.append(' ');
+		}
+		if (thch.range == Ranges.UNITS) { //если ед. формируем выражение для грн.
+			if (thch.u > '0' && thch.d != '1') {
+				result.append(getUnits(thch.u, thch.range == Ranges.UNITS));
+				result.append(' ');
+			}
+		} else {
+			if (thch.u > '0' && thch.d != '1') {
+				result.append(getUnits(thch.u, thch.range == Ranges.THOUSANDS));
+				result.append(' ');
+			}
+		}
+	}
+
+	private static void collectOrdinalUnitsText(String[] sa, StringBuilder result, ThreeChar thch) {
+		switch (thch.range) {
+		case MILLIONS:
+			if (thch.d == '1' || thch.u == '0')
+				result.append("мільйонів");
+			else if (thch.u > '4')
+				result.append("мільйонів");
+			else if (thch.u > '1')
+				result.append("мільйони");
+			else
+				result.append("мільйон");
+			break;
+		case THOUSANDS:
+			if (sa[0].length() > 6 && thch.u == '0' && thch.d == '0' && thch.h == '0')
+				break;
+			if (thch.d == '1' || thch.u == '0')
+				result.append("тисяч");
+			else if (thch.u > '4')
+				result.append("тисяч");
+			else if (thch.u > '1')
+				result.append("тисячі");
+			else
+				result.append("тисяча");
+			break;
+		default:
+			result.append("грн.,");
+		}
 	}
 
 	private static String getHundreds(char dig) {
@@ -231,20 +233,19 @@ public class NumbersDoubleToString {
 		case '9':
 			s = "дев`ят";
 			break;
+		default:
+			s = "";
 		}
 		return s + "надцять";
 	}
 
-	private static boolean NormalDoubleNumeralOrNot(String numberText) {
-
+	private static boolean normalDoubleNumeralOrNot(String numberText) {
 		String str = normalDoubleFormat(numberText);
-
 		if (str == null || str.isEmpty()) {
 			return false;
 		}
 		int commaCount = 0;
 		for (int i = 0; i < str.length(); i++) {
-
 			if (str.charAt(i) == '.') {
 				commaCount++;
 			}
@@ -255,13 +256,11 @@ public class NumbersDoubleToString {
 				return false;
 			}
 		}
-
 		return true;
 	}
 
 	private static String normalDoubleFormat(String str) {
-		String strDoubleFormat = str.replace(',', '.');
-		return strDoubleFormat;
+		return str.replace(',', '.');
 	}
 
 }

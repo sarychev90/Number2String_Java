@@ -11,10 +11,10 @@
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>ServletMain</servlet-name>
-		<url-pattern>*.n</url-pattern>
+		<url-pattern>/</url-pattern>
 	</servlet-mapping>
 	<error-page>
 		<error-code>404</error-code>
-		<location>/WEB-INF/views/err.jsp</location>
+		<location>/WEB-INF/views/error.jsp</location>
 	</error-page>
 </web-app>
